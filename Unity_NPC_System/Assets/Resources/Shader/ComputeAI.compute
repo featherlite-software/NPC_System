@@ -9,7 +9,7 @@ int2 CellBounds_uAI;
 //RWStructuredBuffer<int> DataNpcId_bAI;
 StructuredBuffer<uint> DataNpcSeed_bAI;
 RWStructuredBuffer<half2> DataNpcPos_bAI;
-RWStructuredBuffer<float2> FinalNpcPos_bAI;
+RWStructuredBuffer<float3> FinalNpcPos_bAI;
 RWStructuredBuffer<int> CellsNpc_bAI;
 RWStructuredBuffer<int2> DCellsRace_bAI;
 
@@ -20,7 +20,8 @@ int CellPosToIndex(int2 Pos)
 
 float3 CellToWorld(int2 Pos)
 {
-	
+	return float3(float(Pos.x), 0.0, float(Pos.y));
+
 }
 
 //Pulled off some random place online
@@ -46,7 +47,7 @@ void ComputeAI (uint3 ThreadPos : SV_DispatchThreadID)
 
 		if (CellsNpc_bAI[CellIndex] >= 0)
 		{
-			FinalNpcPos_bAI[CellsNpc_bAI[CellIndex]] = float3(float(CellPos.x), 0.0, float(CellPos.y));
+			FinalNpcPos_bAI[CellsNpc_bAI[CellIndex]] = CellToWorld(CellPos);
 		}
 
 	}
