@@ -1,6 +1,5 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel ComputeAI
-#pragma kernel WriteData
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
@@ -60,12 +59,4 @@ void ComputeAI (uint3 ThreadPos : SV_DispatchThreadID)
 		}
 
 	}
-}
-
-[numthreads(8, 8, 1)]
-void WriteData()
-{
-
-
-
 }
