@@ -1,21 +1,23 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel ComputeAI
+#pragma kernel WriteData
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 
 int2 CellBounds_uAI;
+int Step_uAI;
 
 //RWStructuredBuffer<int> DataNpcId_bAI;
 StructuredBuffer<uint> DataNpcSeed_bAI;
 RWStructuredBuffer<half2> DataNpcPos_bAI;
 RWStructuredBuffer<float3> FinalNpcPos_bAI;
 RWStructuredBuffer<int> CellsNpc_bAI;
-RWStructuredBuffer<int2> DCellsRace_bAI;
+RWStructuredBuffer<int2> CellsRace_bAI;
 
 int CellPosToIndex(int2 Pos)
 {
-	return Pos.y * CellBounds_uAI.x + Pos.x;
+	return (Pos.y * CellBounds_uAI.x)+Pos.x;
 }
 
 float3 CellToWorld(int2 Pos)
@@ -44,12 +46,26 @@ void ComputeAI (uint3 ThreadPos : SV_DispatchThreadID)
 	{
 		int2 CellPos = ThreadPos.xy;
 		int CellIndex = CellPosToIndex(CellPos);
-
+		
 		if (CellsNpc_bAI[CellIndex] >= 0)
 		{
-			FinalNpcPos_bAI[CellsNpc_bAI[CellIndex]] = CellToWorld(CellPos);
+			int NpcId = CellsNpc_bAI[CellIndex];
+			uint StepSeed = DataNpcSeed_bAI[NpcId]+CellIndex+Step_uAI;
+			uint HashFull = Hash(StepSeed);
+			float HashRange = float(HashFull) / 0xffffffffu;
+			int2 Movement = int2(0, 0);
+			FinalNpcPos_bAI[NpcId] = CellToWorld(CellPos);
+			
+
 		}
 
 	}
+}
+
+[numthreads(8, 8, 1)]
+void WriteData()
+{
+
+
 
 }

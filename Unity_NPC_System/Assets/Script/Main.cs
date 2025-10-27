@@ -14,7 +14,7 @@ public class Main : MonoBehaviour
 	// Start is called once before the first execution of Update after the MonoBehaviour is created
 	void Start()
     {
-        Settings.NpcCount = 32;
+        Settings.NpcCount = 128;
         Settings.PathDataDimensions = new Vector2Int(64,64);
         Settings.NpcMesh = NpcMesh;
 
@@ -25,16 +25,13 @@ public class Main : MonoBehaviour
 
 		for (int Npc = 0; Npc < Settings.NpcCount; Npc++) {
 
-            int XPos = Npc;//(Npc%(Settings.PathDataDimensions.x/2))*2;
-            int YPos = 0;//(Npc / (Settings.PathDataDimensions.x / 2))*2;
+            int XPos = (Npc%(Settings.PathDataDimensions.x/2))*2;
+            int YPos = (Npc / (Settings.PathDataDimensions.x / 2))*2;
 
 			Settings.SpawnPositionsNpc[Npc] = new Vector2Int(XPos, YPos);
             Settings.SeedNpc[Npc] = UnityEngine.Random.Range(0, 665536);
-
         }
         
-        Console.WriteLine("e");
-        Console.WriteLine(Settings.SeedNpc);
 
         Sim.Initialize(Settings);
     }

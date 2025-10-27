@@ -1,6 +1,9 @@
 using Palmmedia.ReportGenerator.Core;
+using System.Drawing;
 using Unity.Mathematics;
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class CrowdSettings {
 
@@ -20,6 +23,10 @@ public class CrowdSimulator
     ComputeShader NpcCompute;
     Material NpcRender;
 
+    RenderParams NpcRenderParams;
+
+    public int Step = 0;
+
     //public ComputeBuffer DataNpcId; 
     public ComputeBuffer DataNpcSeed;
 	public ComputeBuffer DataNpcPos;
@@ -35,9 +42,11 @@ public class CrowdSimulator
 	int FinalNpcPosBID = Shader.PropertyToID("FinalNpcPos_bAI");
     int FinalPosVertexBID = Shader.PropertyToID("FinalNpcPos_bNpcSurf");
 	int CellsNpcBID = Shader.PropertyToID("CellsNpc_bAI");
-	int CellsRaceBID = Shader.PropertyToID("DCellsRace_bAI");
+	int CellsRaceBID = Shader.PropertyToID("CellsRace_bAI");
 
     int PathBoundsUID = Shader.PropertyToID("CellBounds_uAI"); // Int2
+    int NpcCountUID = Shader.PropertyToID("NpcCount_bNpcSurf"); //Int
+    int StepUID = Shader.PropertyToID("Step_uAI"); //Int
 
 	public CrowdSettings Settings; 
 
@@ -46,11 +55,19 @@ public class CrowdSimulator
 		NpcCompute = Resources.Load<ComputeShader>("Shader/ComputeAI");
 		NpcRender = Resources.Load<Material>("Shader/RenderNpc");
 
-		ComputeNpcKID = NpcCompute.FindKernel("ComputeAI");
+        ComputeNpcKID = NpcCompute.FindKernel("ComputeAI");
 
-        Settings = InitSettings;
+		Settings = InitSettings;
 
-        int Area = Settings.PathDataDimensions.x * Settings.PathDataDimensions.y;
+		Vector3 BoundPosition = new Vector3(((float)Settings.PathDataDimensions.x) / 2.0f, 0.0f, ((float)Settings.PathDataDimensions.x) / 2.0f);
+		Vector3 BoundSize = new Vector3((float)Settings.PathDataDimensions.x + 2.0f, 2.0f, (float)Settings.PathDataDimensions.x + 2.0f);
+		Bounds NpcBounds = new Bounds(BoundPosition, BoundSize);
+		NpcRenderParams = new RenderParams(NpcRender);
+		NpcRenderParams.worldBounds = NpcBounds;
+
+        NpcRenderParams.material.SetInt(NpcCountUID, Settings.NpcCount);
+
+		int Area = Settings.PathDataDimensions.x * Settings.PathDataDimensions.y;
 		//DataNpcId = new ComputeBuffer(Settings.NpcCount, 4); // Int (32)
 		DataNpcPos = new ComputeBuffer(Settings.NpcCount, 4); // Half Vec2 (32)
         DataNpcSeed = new ComputeBuffer(Settings.NpcCount, 4); // uInt (32) (Is just a signed int on cpu side)
@@ -71,9 +88,11 @@ public class CrowdSimulator
             StartingCells[PosIndex] = Index;
         }
 
+        
+
         CellsNpc.SetData(StartingCells);
 
-        NpcCompute.SetInts(PathBoundsUID, InitSettings.PathDataDimensions.x * InitSettings.PathDataDimensions.y);
+        NpcCompute.SetInts(PathBoundsUID, InitSettings.PathDataDimensions.x, InitSettings.PathDataDimensions.y);
 
 		// NpcCompute.SetBuffer(ComputeNpcKID, DataNpcIdBID, DataNpcId);
 		NpcCompute.SetBuffer(ComputeNpcKID, DataNpcSeedBID, DataNpcSeed);
@@ -81,18 +100,14 @@ public class CrowdSimulator
 		NpcCompute.SetBuffer(ComputeNpcKID, FinalNpcPosBID, FinalNpcPos);
 		NpcCompute.SetBuffer(ComputeNpcKID, CellsNpcBID, CellsNpc);
 		NpcCompute.SetBuffer(ComputeNpcKID, CellsRaceBID, CellsRace);
-
-
 	}
 
     public void StepSimulation () {
-        Vector2Int Size = Settings.PathDataDimensions;
+		Vector2Int Size = Settings.PathDataDimensions;
 
+        NpcCompute.SetInt(StepUID, Step);
+        Step++;
         NpcCompute.Dispatch(ComputeNpcKID, Mathf.FloorToInt(((float)Size.x) / 8.0f), Mathf.FloorToInt(((float)Size.y) / 8.0f), 1);
-
-        Bounds NpcBounds = new Bounds(new Vector3 (((float)Size.x)/2.0f, 0.0f, ((float)Size.y) / 2.0f), new Vector3((float)Size.x, 2.0f, (float)Size.y));
-        RenderParams NpcRenderParams = new RenderParams(NpcRender);
-        NpcRenderParams.worldBounds = NpcBounds;
 
         NpcRenderParams.material.SetBuffer(FinalPosVertexBID, FinalNpcPos);
 
