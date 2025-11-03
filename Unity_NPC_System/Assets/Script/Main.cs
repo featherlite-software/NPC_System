@@ -11,11 +11,14 @@ public class Main : MonoBehaviour
     CrowdSimulator Sim = new CrowdSimulator();
     CrowdSettings Settings = new CrowdSettings();
 
+    float LastStepTime = 0.0f;
+    float StepSpeed = 1.0f;
+
 	// Start is called once before the first execution of Update after the MonoBehaviour is created
 	void Start()
     {
-        Settings.NpcCount = 128;
-        Settings.PathDataDimensions = new Vector2Int(64,64);
+        Settings.NpcCount = 1024;
+        Settings.PathDataDimensions = new Vector2Int(128,128);
         Settings.NpcMesh = NpcMesh;
 
         Settings.SpawnPositionsNpc = new Vector2Int[Settings.NpcCount];
@@ -39,6 +42,10 @@ public class Main : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-		Sim.StepSimulation();
+        if (LastStepTime+StepSpeed < Time.time) {
+			Sim.StepSimulation();
+            LastStepTime = Time.time;
+	    }
+        Sim.Draw();
 	}
 }

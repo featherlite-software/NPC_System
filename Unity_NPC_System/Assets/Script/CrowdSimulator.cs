@@ -23,13 +23,14 @@ public class CrowdSimulator
     ComputeShader NpcCompute;
     Material NpcRender;
 
-    RenderParams NpcRenderParams;
+	RenderParams NpcRenderParams;
 
     public int Step = 0;
 
     //public ComputeBuffer DataNpcId; 
     public ComputeBuffer DataNpcSeed;
 	public ComputeBuffer DataNpcPos;
+    public ComputeBuffer DataNpcDir;
     public ComputeBuffer FinalNpcPos;
 	public ComputeBuffer CellsNpc;
     private ComputeBuffer CellsRace;
@@ -39,6 +40,7 @@ public class CrowdSimulator
     //int DataNpcIdBID = Shader.PropertyToID("DataNpcId_bAI");
     int DataNpcSeedBID = Shader.PropertyToID("DataNpcSeed_bAI");
 	int DataNpcPosBID = Shader.PropertyToID("DataNpcPos_bAI");
+    int DataNpcDirBID = Shader.PropertyToID("DataNpcDir_bAI");
 	int FinalNpcPosBID = Shader.PropertyToID("FinalNpcPos_bAI");
     int FinalPosVertexBID = Shader.PropertyToID("FinalNpcPos_bNpcSurf");
 	int CellsNpcBID = Shader.PropertyToID("CellsNpc_bAI");
@@ -54,7 +56,7 @@ public class CrowdSimulator
 
 		NpcCompute = Resources.Load<ComputeShader>("Shader/ComputeAI");
 		NpcRender = Resources.Load<Material>("Shader/RenderNpc");
-
+        
         ComputeNpcKID = NpcCompute.FindKernel("ComputeAI");
 
 		Settings = InitSettings;
@@ -70,6 +72,7 @@ public class CrowdSimulator
 		int Area = Settings.PathDataDimensions.x * Settings.PathDataDimensions.y;
 		//DataNpcId = new ComputeBuffer(Settings.NpcCount, 4); // Int (32)
 		DataNpcPos = new ComputeBuffer(Settings.NpcCount, 4); // Half Vec2 (32)
+		DataNpcDir = new ComputeBuffer(Settings.NpcCount, 4); // Half Vec2 (32)
         DataNpcSeed = new ComputeBuffer(Settings.NpcCount, 4); // uInt (32) (Is just a signed int on cpu side)
         FinalNpcPos = new ComputeBuffer(Settings.NpcCount, 12); // Float Vec3 (96)
 		CellsNpc = new ComputeBuffer(Area, 4); // Int (32)
@@ -97,9 +100,11 @@ public class CrowdSimulator
 		// NpcCompute.SetBuffer(ComputeNpcKID, DataNpcIdBID, DataNpcId);
 		NpcCompute.SetBuffer(ComputeNpcKID, DataNpcSeedBID, DataNpcSeed);
 		NpcCompute.SetBuffer(ComputeNpcKID, DataNpcPosBID, DataNpcPos);
+        NpcCompute.SetBuffer(ComputeNpcKID, DataNpcDirBID, DataNpcDir);
 		NpcCompute.SetBuffer(ComputeNpcKID, FinalNpcPosBID, FinalNpcPos);
 		NpcCompute.SetBuffer(ComputeNpcKID, CellsNpcBID, CellsNpc);
 		NpcCompute.SetBuffer(ComputeNpcKID, CellsRaceBID, CellsRace);
+		NpcRenderParams.material.SetBuffer(FinalPosVertexBID, FinalNpcPos);
 	}
 
     public void StepSimulation () {
@@ -108,11 +113,12 @@ public class CrowdSimulator
         NpcCompute.SetInt(StepUID, Step);
         Step++;
         NpcCompute.Dispatch(ComputeNpcKID, Mathf.FloorToInt(((float)Size.x) / 8.0f), Mathf.FloorToInt(((float)Size.y) / 8.0f), 1);
-
-        NpcRenderParams.material.SetBuffer(FinalPosVertexBID, FinalNpcPos);
-
-        Graphics.RenderMeshPrimitives(NpcRenderParams, Settings.NpcMesh, 0, Settings.NpcCount);
      }
+
+     public void Draw () {
+
+		Graphics.RenderMeshPrimitives(NpcRenderParams, Settings.NpcMesh, 0, Settings.NpcCount);
+	}
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     /*void Start()

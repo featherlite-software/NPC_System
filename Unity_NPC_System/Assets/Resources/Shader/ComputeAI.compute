@@ -1,15 +1,15 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel ComputeAI
-
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
+#pragma kernel CheckRace
 
 int2 CellBounds_uAI;
 int Step_uAI;
+int NpcCount_bNpcSurf;
 
 //RWStructuredBuffer<int> DataNpcId_bAI;
 StructuredBuffer<uint> DataNpcSeed_bAI;
 RWStructuredBuffer<half2> DataNpcPos_bAI;
+RWStructuredBuffer<half2> DataNpcDir_bAI;
 RWStructuredBuffer<float3> FinalNpcPos_bAI;
 RWStructuredBuffer<int> CellsNpc_bAI;
 RWStructuredBuffer<int2> CellsRace_bAI;
@@ -26,22 +26,26 @@ float3 CellToWorld(int2 Pos)
 }
 
 //Pulled off some random place online
-// Hash function from H. Schechter & R. Bridson, goo.gl/RXiKaH
-uint Hash(uint s)
+uint Hash(uint x)
 {
-	s ^= 2747636419u;
-	s *= 2654435769u;
-	s ^= s >> 16;
-	s *= 2654435769u;
-	s ^= s >> 16;
-	s *= 2654435769u;
-	return s;
+	x += (x << 10u);
+	x ^= (x >> 6u);
+	x += (x << 3u);
+	x ^= (x >> 11u);
+	x += (x << 15u);
+	return x;
+}
+
+bool ValidThread (uint3 ThreadPos) {
+
+	return ThreadPos.x < CellBounds_uAI.x && ThreadPos.y < CellBounds_uAI.y;
+
 }
 
 [numthreads(8,8,1)]
 void ComputeAI (uint3 ThreadPos : SV_DispatchThreadID)
 {
-	if (ThreadPos.x < CellBounds_uAI.x && ThreadPos.y < CellBounds_uAI.y)
+	if (ValidThread(ThreadPos))
 	{
 		int2 CellPos = ThreadPos.xy;
 		int CellIndex = CellPosToIndex(CellPos);
@@ -49,14 +53,59 @@ void ComputeAI (uint3 ThreadPos : SV_DispatchThreadID)
 		if (CellsNpc_bAI[CellIndex] >= 0)
 		{
 			int NpcId = CellsNpc_bAI[CellIndex];
-			uint StepSeed = DataNpcSeed_bAI[NpcId]+CellIndex+Step_uAI;
-			uint HashFull = Hash(StepSeed);
-			float HashRange = float(HashFull) / 0xffffffffu;
+			uint StepSeed = DataNpcSeed_bAI[NpcId]+Step_uAI;
+			uint HashX = Hash(StepSeed+CellPos.x);
+			uint HashY = Hash(StepSeed+CellPos.y);
+			//float HashRange = float(HashFull) / 0xffffffffu;
 			int2 Movement = int2(0, 0);
-			FinalNpcPos_bAI[NpcId] = CellToWorld(CellPos);
 			
+			if (HashX < 1431655765u)
+			{
+				Movement.x = 1;
+			}
+			else if (HashX < 2863311530u)
+			{
+				Movement.x = -1;
+			}
+			else
+			{
+				Movement.x = 0;
+			}
+			if (HashY < 1431655765u)
+			{
+				Movement.y = 1;
+			}
+			else if (HashY < 2863311530u)
+			{
+				Movement.y = -1;
+			}
+			else
+			{
+				Movement.y = 0;
+			}
+			
+			//Movement.x = (HashX < 2147483647u) ? 1 : -1;
+			//Movement.y = (HashY < 2147483647u) ? 1 : -1;
+			
+			//Movement = int2(0, 1);
+			
+			if ((Movement + CellPos).x >= 0 && (Movement + CellPos).x < CellBounds_uAI.x && (Movement + CellPos).y >= 0 && (Movement + CellPos).y < CellBounds_uAI.y)
+			{
+				CellsNpc_bAI[CellIndex] = -1;
+				CellsNpc_bAI[CellPosToIndex(Movement + CellPos)] = NpcId;
+			}
+			FinalNpcPos_bAI[NpcId] = CellToWorld(CellPos + Movement) + float3(0.0,Step_uAI,0.0);
 
 		}
 
 	}
+}
+[numthreads(8,8,1)]
+void CheckRace(uint3 ThreadPos : SV_DispatchThreadID)
+{
+	if (ValidThread(ThreadPos))
+	{
+		int2 CellPos = ThreadPos.xy;
+	}
+
 }
