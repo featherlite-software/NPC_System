@@ -26,6 +26,7 @@ float3 CellToWorld(int2 Pos)
 }
 
 //Pulled off some random place online
+//https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
 uint Hash(uint x)
 {
 	x += (x << 10u);
@@ -34,6 +35,22 @@ uint Hash(uint x)
 	x ^= (x >> 11u);
 	x += (x << 15u);
 	return x;
+}
+float FloatConstruct(uint m)
+{
+	const uint ieeeMantissa = 0x007FFFFFu; // binary32 mantissa bitmask
+	const uint ieeeOne = 0x3F800000u; // 1.0 in IEEE binary32
+
+	m &= ieeeMantissa; // Keep only mantissa bits (fractional part)
+	m |= ieeeOne; // Add fractional part to 1.0
+
+	float f = asfloat(m); // Range [1:2]
+	return f - 1.0; // Range [0:1]
+}
+
+float RandFloat(int Seed) {
+	return FloatConstruct(Hash(Seed));
+
 }
 
 bool ValidThread (uint3 ThreadPos) {
@@ -54,16 +71,16 @@ void ComputeAI (uint3 ThreadPos : SV_DispatchThreadID)
 		{
 			int NpcId = CellsNpc_bAI[CellIndex];
 			uint StepSeed = DataNpcSeed_bAI[NpcId]+Step_uAI;
-			uint HashX = Hash(StepSeed+CellPos.x);
-			uint HashY = Hash(StepSeed+CellPos.y);
+			float HashX = FloatConstruct(Hash(StepSeed + CellPos.x));
+			float HashY = FloatConstruct(Hash(StepSeed + CellPos.y));
 			//float HashRange = float(HashFull) / 0xffffffffu;
 			int2 Movement = int2(0, 0);
 			
-			if (HashX < 1431655765u)
+			if (HashX < .33)
 			{
 				Movement.x = 1;
 			}
-			else if (HashX < 2863311530u)
+			else if (HashX < .66)
 			{
 				Movement.x = -1;
 			}
@@ -71,11 +88,11 @@ void ComputeAI (uint3 ThreadPos : SV_DispatchThreadID)
 			{
 				Movement.x = 0;
 			}
-			if (HashY < 1431655765u)
+			if (HashY < .33)
 			{
 				Movement.y = 1;
 			}
-			else if (HashY < 2863311530u)
+			else if (HashY < .66)
 			{
 				Movement.y = -1;
 			}
