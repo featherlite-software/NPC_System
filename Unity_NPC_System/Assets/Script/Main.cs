@@ -12,7 +12,7 @@ public class Main : MonoBehaviour
     CrowdSettings Settings = new CrowdSettings();
 
     float LastStepTime = 0.0f;
-    float StepSpeed = 1.0f;
+    float StepSpeed = 0.25f;
 
 	// Start is called once before the first execution of Update after the MonoBehaviour is created
 	void Start()

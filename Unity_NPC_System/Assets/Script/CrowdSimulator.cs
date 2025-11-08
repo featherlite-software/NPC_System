@@ -81,9 +81,10 @@ public class CrowdSimulator
         DataNpcSeed.SetData(Settings.SeedNpc);
         int[] StartingCells = new int[Area];
 
-        for (int Index = 0; Index < Area; Index++) {
+
+		for (int Index = 0; Index < Area; Index++) {
             StartingCells[Index] = -1;
-        }
+		}
 
         for (int Index = 0; Index < Settings.NpcCount; Index++) {
             Vector2Int Pos = Settings.SpawnPositionsNpc[Index];
@@ -101,7 +102,7 @@ public class CrowdSimulator
 		NpcCompute.SetBuffer(ComputeNpcKID, DataNpcSeedBID, DataNpcSeed);
 		NpcCompute.SetBuffer(ComputeNpcKID, DataNpcPosBID, DataNpcPos);
         NpcCompute.SetBuffer(ComputeNpcKID, DataNpcDirBID, DataNpcDir);
-		NpcCompute.SetBuffer(ComputeNpcKID, FinalNpcPosBID, FinalNpcPos);
+		//NpcCompute.SetBuffer(ComputeNpcKID, FinalNpcPosBID, FinalNpcPos);
 		NpcCompute.SetBuffer(ComputeNpcKID, CellsNpcBID, CellsNpc);
 		NpcCompute.SetBuffer(ComputeNpcKID, CellsRaceBID, CellsRace);
 		NpcRenderParams.material.SetBuffer(FinalPosVertexBID, FinalNpcPos);
