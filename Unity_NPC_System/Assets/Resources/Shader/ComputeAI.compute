@@ -145,6 +145,9 @@ void CheckRace(uint3 ThreadPos : SV_DispatchThreadID)
 			}
 			MoveDir = int2(int(NpcDir.x), int(NpcDir.y));
 
+			CellsNpc_bAI[MoveIndex] = MoveId;
+			CellsNpc_bAI[MoveIndex + CellPosToIndex(-MoveDir)] = -1;
+
 		}
 	}
 
