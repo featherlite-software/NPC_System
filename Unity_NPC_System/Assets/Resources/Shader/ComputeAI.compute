@@ -1,6 +1,7 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel ComputeAI
 #pragma kernel CheckRace
+#pragma kernel FinalizeData
 
 int2 CellBounds_uAI;
 int Step_uAI;
@@ -150,16 +151,21 @@ void CheckRace(uint3 ThreadPos : SV_DispatchThreadID)
 
 		}
 	}
-
 }
 
 [numthreads(8,8,1)]
-void ClearBuffers(uint3 ThreadPos : SV_DispatchThreadID)
+void FinalizeData(uint3 ThreadPos : SV_DispatchThreadID)
 {
 	if (ValidThread(ThreadPos))
 	{
 		int2 CellPos = ThreadPos.xy;
-		CellsRace_bAI[CellPosToIndex(CellPos)] = int2(-1, -1);
+		int CellIndex = CellPosToIndex(CellPos);
+		CellsRace_bAI[CellIndex] = int2(-1, -1);
+		if (CellsNpc_bAI[CellIndex] >= 0)
+		{
+			FinalNpcPos_bAI[CellIndex] = CellToWorld(CellPos);
+
+		}
 
 	}
 

@@ -36,6 +36,8 @@ public class CrowdSimulator
     private ComputeBuffer CellsRace;
 
     int ComputeNpcKID;
+    int CheckRaceKID;
+    int FinalizeDataKID;
 
     //int DataNpcIdBID = Shader.PropertyToID("DataNpcId_bAI");
     int DataNpcSeedBID = Shader.PropertyToID("DataNpcSeed_bAI");
@@ -58,6 +60,8 @@ public class CrowdSimulator
 		NpcRender = Resources.Load<Material>("Shader/RenderNpc");
         
         ComputeNpcKID = NpcCompute.FindKernel("ComputeAI");
+		CheckRaceKID = NpcCompute.FindKernel("CheckRace");
+	    FinalizeDataKID = NpcCompute.FindKernel("FinalizeData");
 
 		Settings = InitSettings;
 
@@ -105,6 +109,15 @@ public class CrowdSimulator
 		//NpcCompute.SetBuffer(ComputeNpcKID, FinalNpcPosBID, FinalNpcPos);
 		NpcCompute.SetBuffer(ComputeNpcKID, CellsNpcBID, CellsNpc);
 		NpcCompute.SetBuffer(ComputeNpcKID, CellsRaceBID, CellsRace);
+
+        NpcCompute.SetBuffer(CheckRaceKID, CellsRaceBID, CellsRace);
+		NpcCompute.SetBuffer(CheckRaceKID, DataNpcDirBID, DataNpcDir);
+		NpcCompute.SetBuffer(CheckRaceKID, CellsNpcBID, CellsNpc);
+
+		NpcCompute.SetBuffer(FinalizeDataKID, CellsRaceBID, CellsRace);
+		NpcCompute.SetBuffer(FinalizeDataKID, FinalNpcPosBID, FinalNpcPos);
+		NpcCompute.SetBuffer(FinalizeDataKID, CellsNpcBID, CellsNpc);
+
 		NpcRenderParams.material.SetBuffer(FinalPosVertexBID, FinalNpcPos);
 	}
 
@@ -113,8 +126,11 @@ public class CrowdSimulator
 
         NpcCompute.SetInt(StepUID, Step);
         Step++;
-        NpcCompute.Dispatch(ComputeNpcKID, Mathf.FloorToInt(((float)Size.x) / 8.0f), Mathf.FloorToInt(((float)Size.y) / 8.0f), 1);
-     }
+        Vector3Int DispatchSize = new Vector3Int(Mathf.FloorToInt(((float)Size.x) / 8.0f), Mathf.FloorToInt(((float)Size.y) / 8.0f), 1);
+        NpcCompute.Dispatch(ComputeNpcKID, DispatchSize.x, DispatchSize.y, DispatchSize.z);
+		NpcCompute.Dispatch(CheckRaceKID, DispatchSize.x, DispatchSize.y, DispatchSize.z);
+		NpcCompute.Dispatch(FinalizeDataKID, DispatchSize.x, DispatchSize.y, DispatchSize.z);
+	}
 
      public void Draw () {
 
