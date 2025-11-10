@@ -2,6 +2,7 @@ using Palmmedia.ReportGenerator.Core;
 using System.Drawing;
 using Unity.Mathematics;
 using Unity.VisualScripting.FullSerializer;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -128,8 +129,16 @@ public class CrowdSimulator
         Step++;
         Vector3Int DispatchSize = new Vector3Int(Mathf.FloorToInt(((float)Size.x) / 8.0f), Mathf.FloorToInt(((float)Size.y) / 8.0f), 1);
         NpcCompute.Dispatch(ComputeNpcKID, DispatchSize.x, DispatchSize.y, DispatchSize.z);
+        GraphicsFence NpcFence = Graphics.CreateGraphicsFence(GraphicsFenceType.AsyncQueueSynchronisation, SynchronisationStageFlags.AllGPUOperations);
+        Graphics.WaitOnAsyncGraphicsFence(NpcFence);
 		NpcCompute.Dispatch(CheckRaceKID, DispatchSize.x, DispatchSize.y, DispatchSize.z);
+        MonoBehaviour.print(NpcFence.passed);
+
+		GraphicsFence RaceFence = Graphics.CreateGraphicsFence(GraphicsFenceType.AsyncQueueSynchronisation, SynchronisationStageFlags.AllGPUOperations);
+		Graphics.WaitOnAsyncGraphicsFence(RaceFence);
 		NpcCompute.Dispatch(FinalizeDataKID, DispatchSize.x, DispatchSize.y, DispatchSize.z);
+		MonoBehaviour.print(RaceFence.passed);
+
 	}
 
      public void Draw () {

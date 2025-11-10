@@ -22,7 +22,7 @@ int CellPosToIndex(int2 Pos)
 
 float3 CellToWorld(int2 Pos)
 {
-	return float3(float(Pos.x), 0.0, float(Pos.y));
+	return float3(float(Pos.x), float(Step_uAI), float(Pos.y));
 
 }
 
@@ -106,14 +106,17 @@ void ComputeAI (uint3 ThreadPos : SV_DispatchThreadID)
 			//Movement.y = (HashY < 2147483647u) ? 1 : -1;
 			
 			//Movement = int2(0, 1);
-			DataNpcDir_bAI[NpcId] = float2(0.0,0.0);
+			DataNpcDir_bAI[NpcId] = half2(0.0,0.0);
 			if ((Movement + CellPos).x >= 0 && (Movement + CellPos).x < CellBounds_uAI.x && (Movement + CellPos).y >= 0 && (Movement + CellPos).y < CellBounds_uAI.y)
 			{
 				//CellsNpc_bAI[CellIndex] = -1;
 				//CellsNpc_bAI[CellPosToIndex(Movement + CellPos)] = NpcId;
-				DataNpcDir_bAI[NpcId] = float2(float(Movement.x), float(Movement.y));
+				DataNpcDir_bAI[NpcId] = half2(half(Movement.x), half(Movement.y));
 				CellsRace_bAI[CellIndex].y = NpcId;
-				CellsRace_bAI[CellPosToIndex(Movement + CellPos)].x = NpcId;
+				if (Movement.x > 0 || Movement.y > 0)
+				{
+					CellsRace_bAI[CellPosToIndex(Movement + CellPos)].x = NpcId;
+				}
 
 			}
 			//FinalNpcPos_bAI[NpcId] = CellToWorld(CellPos + Movement) + float3(0.0,Step_uAI,0.0);
@@ -138,16 +141,16 @@ void CheckRace(uint3 ThreadPos : SV_DispatchThreadID)
 			NpcDir = float2(clamp(NpcDir.x * 100.0, -1.0, 1.0), clamp(NpcDir.y * 100.0, -1.0, 1.0));
 			if (abs(NpcDir.x) < 1.0)
 			{
-				NpcDir.x = 0;
+				NpcDir.x = 0.0;
 			}
 			if (abs(NpcDir.y) < 1.0)
 			{
-				NpcDir.y = 0;
+				NpcDir.y = 0.0;
 			}
 			MoveDir = int2(int(NpcDir.x), int(NpcDir.y));
 
 			CellsNpc_bAI[MoveIndex] = MoveId;
-			CellsNpc_bAI[MoveIndex + CellPosToIndex(-MoveDir)] = -1;
+			CellsNpc_bAI[CellPosToIndex(-MoveDir + CellPos)] = -1;
 
 		}
 	}
@@ -163,7 +166,7 @@ void FinalizeData(uint3 ThreadPos : SV_DispatchThreadID)
 		CellsRace_bAI[CellIndex] = int2(-1, -1);
 		if (CellsNpc_bAI[CellIndex] >= 0)
 		{
-			FinalNpcPos_bAI[CellIndex] = CellToWorld(CellPos);
+			FinalNpcPos_bAI[CellsNpc_bAI[CellIndex]] = CellToWorld(CellPos);
 
 		}
 
