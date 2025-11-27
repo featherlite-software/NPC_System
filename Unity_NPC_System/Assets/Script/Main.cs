@@ -14,22 +14,26 @@ public class Main : MonoBehaviour
     float LastStepTime = 0.0f;
     float StepSpeed = 0.25f;
 
+    [SerializeField]
+    int NpcAmount = 1024;
+
+    [SerializeField]
+    Vector2Int Size = new Vector2Int(128, 128);
+
 	// Start is called once before the first execution of Update after the MonoBehaviour is created
 	void Start()
     {
-        Settings.NpcCount = 1024;
-        Settings.PathDataDimensions = new Vector2Int(128,128);
+        Settings.NpcCount = NpcAmount;
+        Settings.PathDataDimensions = Size;
         Settings.NpcMesh = NpcMesh;
-
-        Settings.SpawnPositionsNpc = new Vector2Int[Settings.NpcCount];
 
 		Settings.SeedNpc = new int[Settings.NpcCount];
 		Settings.SpawnPositionsNpc = new Vector2Int[Settings.NpcCount];
 
 		for (int Npc = 0; Npc < Settings.NpcCount; Npc++) {
 
-            int XPos = (Npc%(Settings.PathDataDimensions.x/2))*2;
-            int YPos = (Npc / (Settings.PathDataDimensions.x / 2))*2;
+            int XPos = Npc;//(Npc%(Settings.PathDataDimensions.x/2))*2;
+            int YPos = 4;//(Npc / (Settings.PathDataDimensions.x / 2))*2;
 
 			Settings.SpawnPositionsNpc[Npc] = new Vector2Int(XPos, YPos);
             Settings.SeedNpc[Npc] = UnityEngine.Random.Range(0, 665536);

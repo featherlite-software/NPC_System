@@ -105,7 +105,7 @@ void ComputeAI (uint3 ThreadPos : SV_DispatchThreadID)
 			//Movement.x = (HashX < 2147483647u) ? 1 : -1;
 			//Movement.y = (HashY < 2147483647u) ? 1 : -1;
 			
-			//Movement = int2(0, 1);
+			Movement = int2(0, 1);
 			DataNpcDir_bAI[NpcId] = half2(0.0,0.0);
 			if ((Movement + CellPos).x >= 0 && (Movement + CellPos).x < CellBounds_uAI.x && (Movement + CellPos).y >= 0 && (Movement + CellPos).y < CellBounds_uAI.y)
 			{
@@ -138,7 +138,7 @@ void CheckRace(uint3 ThreadPos : SV_DispatchThreadID)
 			int MoveId = CellsRace_bAI[MoveIndex].x;
 			float2 NpcDir = normalize(DataNpcDir_bAI[MoveId]);
 			int2 MoveDir;
-			NpcDir = float2(clamp(NpcDir.x * 100.0, -1.0, 1.0), clamp(NpcDir.y * 100.0, -1.0, 1.0));
+			/*NpcDir = float2(clamp(float(NpcDir.x) * 100.0, -1.0, 1.0), clamp(float(NpcDir.y) * 100.0, -1.0, 1.0));
 			if (abs(NpcDir.x) < 1.0)
 			{
 				NpcDir.x = 0.0;
@@ -146,10 +146,11 @@ void CheckRace(uint3 ThreadPos : SV_DispatchThreadID)
 			if (abs(NpcDir.y) < 1.0)
 			{
 				NpcDir.y = 0.0;
-			}
+			}*/
 			MoveDir = int2(int(NpcDir.x), int(NpcDir.y));
 
 			CellsNpc_bAI[MoveIndex] = MoveId;
+			
 			CellsNpc_bAI[CellPosToIndex(-MoveDir + CellPos)] = -1;
 
 		}
