@@ -9,9 +9,10 @@ int NpcCount_bNpcSurf;
 
 //RWStructuredBuffer<int> DataNpcId_bAI;
 StructuredBuffer<uint> DataNpcSeed_bAI;
-RWStructuredBuffer<half2> DataNpcPos_bAI;
-RWStructuredBuffer<half2> DataNpcDir_bAI;
+RWStructuredBuffer<float2> DataNpcPos_bAI;
+RWStructuredBuffer<float2> DataNpcDir_bAI;
 RWStructuredBuffer<float3> FinalNpcPos_bAI;
+RWStructuredBuffer<int2> DataCellMovement_bAI;
 RWStructuredBuffer<int> CellsNpc_bAI;
 RWStructuredBuffer<int2> CellsRace_bAI;
 
@@ -22,7 +23,7 @@ int CellPosToIndex(int2 Pos)
 
 float3 CellToWorld(int2 Pos)
 {
-	return float3(float(Pos.x), float(Step_uAI), float(Pos.y));
+	return float3(float(Pos.x), 0.0, float(Pos.y));
 
 }
 
@@ -105,14 +106,14 @@ void ComputeAI (uint3 ThreadPos : SV_DispatchThreadID)
 			//Movement.x = (HashX < 2147483647u) ? 1 : -1;
 			//Movement.y = (HashY < 2147483647u) ? 1 : -1;
 			
-			Movement = int2(0, 1);
-			DataNpcDir_bAI[NpcId] = half2(0.0,0.0);
+			//Movement = int2(0, 1);
+			DataNpcDir_bAI[NpcId] = float2(0.0, 0.0);
+			CellsRace_bAI[CellIndex].y = NpcId;
 			if ((Movement + CellPos).x >= 0 && (Movement + CellPos).x < CellBounds_uAI.x && (Movement + CellPos).y >= 0 && (Movement + CellPos).y < CellBounds_uAI.y)
 			{
 				//CellsNpc_bAI[CellIndex] = -1;
 				//CellsNpc_bAI[CellPosToIndex(Movement + CellPos)] = NpcId;
-				DataNpcDir_bAI[NpcId] = half2(half(Movement.x), half(Movement.y));
-				CellsRace_bAI[CellIndex].y = NpcId;
+				DataNpcDir_bAI[NpcId] = float2(float(Movement.x), float(Movement.y));
 				if (Movement.x > 0 || Movement.y > 0)
 				{
 					CellsRace_bAI[CellPosToIndex(Movement + CellPos)].x = NpcId;
@@ -136,19 +137,10 @@ void CheckRace(uint3 ThreadPos : SV_DispatchThreadID)
 		if (CellsRace_bAI[MoveIndex].x >= 0 && CellsRace_bAI[MoveIndex].y < 0)
 		{
 			int MoveId = CellsRace_bAI[MoveIndex].x;
-			float2 NpcDir = normalize(DataNpcDir_bAI[MoveId]);
 			int2 MoveDir;
-			/*NpcDir = float2(clamp(float(NpcDir.x) * 100.0, -1.0, 1.0), clamp(float(NpcDir.y) * 100.0, -1.0, 1.0));
-			if (abs(NpcDir.x) < 1.0)
-			{
-				NpcDir.x = 0.0;
-			}
-			if (abs(NpcDir.y) < 1.0)
-			{
-				NpcDir.y = 0.0;
-			}*/
-			MoveDir = int2(int(NpcDir.x), int(NpcDir.y));
+			MoveDir = DataCellMovement_bAI[MoveId];
 
+			
 			CellsNpc_bAI[MoveIndex] = MoveId;
 			
 			CellsNpc_bAI[CellPosToIndex(-MoveDir + CellPos)] = -1;

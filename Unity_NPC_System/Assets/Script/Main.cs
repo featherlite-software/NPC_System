@@ -32,8 +32,8 @@ public class Main : MonoBehaviour
 
 		for (int Npc = 0; Npc < Settings.NpcCount; Npc++) {
 
-            int XPos = Npc;//(Npc%(Settings.PathDataDimensions.x/2))*2;
-            int YPos = 4;//(Npc / (Settings.PathDataDimensions.x / 2))*2;
+            int XPos = (Npc%(Settings.PathDataDimensions.x/2))*2;
+            int YPos = (Npc / (Settings.PathDataDimensions.x / 2))*2;
 
 			Settings.SpawnPositionsNpc[Npc] = new Vector2Int(XPos, YPos);
             Settings.SeedNpc[Npc] = UnityEngine.Random.Range(0, 665536);

@@ -33,6 +33,7 @@ public class CrowdSimulator
 	public ComputeBuffer DataNpcPos;
     public ComputeBuffer DataNpcDir;
     public ComputeBuffer FinalNpcPos;
+    private ComputeBuffer DataCellMovement;
 	public ComputeBuffer CellsNpc;
     private ComputeBuffer CellsRace;
 
@@ -46,6 +47,7 @@ public class CrowdSimulator
     int DataNpcDirBID = Shader.PropertyToID("DataNpcDir_bAI");
 	int FinalNpcPosBID = Shader.PropertyToID("FinalNpcPos_bAI");
     int FinalPosVertexBID = Shader.PropertyToID("FinalNpcPos_bNpcSurf");
+    int DataCellMovementBID = Shader.PropertyToID("DataCellMovement_bAI");
 	int CellsNpcBID = Shader.PropertyToID("CellsNpc_bAI");
 	int CellsRaceBID = Shader.PropertyToID("CellsRace_bAI");
 
@@ -76,10 +78,11 @@ public class CrowdSimulator
 
 		int Area = Settings.PathDataDimensions.x * Settings.PathDataDimensions.y;
 		//DataNpcId = new ComputeBuffer(Settings.NpcCount, 4); // Int (32)
-		DataNpcPos = new ComputeBuffer(Settings.NpcCount, 4); // Half Vec2 (32)
-		DataNpcDir = new ComputeBuffer(Settings.NpcCount, 4); // Half Vec2 (32)
+		DataNpcPos = new ComputeBuffer(Settings.NpcCount, 8); // Float Vec2 (64)
+		DataNpcDir = new ComputeBuffer(Settings.NpcCount, 8); // Float Vec2 (64)
         DataNpcSeed = new ComputeBuffer(Settings.NpcCount, 4); // uInt (32) (Is just a signed int on cpu side)
         FinalNpcPos = new ComputeBuffer(Settings.NpcCount, 12); // Float Vec3 (96)
+        DataCellMovement = new ComputeBuffer(Settings.NpcCount, 8); //Int Vec2 (64)
 		CellsNpc = new ComputeBuffer(Area, 4); // Int (32)
         CellsRace = new ComputeBuffer(Area, 8); // Int Vec2 (64)
 
@@ -107,13 +110,15 @@ public class CrowdSimulator
 		NpcCompute.SetBuffer(ComputeNpcKID, DataNpcSeedBID, DataNpcSeed);
 		NpcCompute.SetBuffer(ComputeNpcKID, DataNpcPosBID, DataNpcPos);
         NpcCompute.SetBuffer(ComputeNpcKID, DataNpcDirBID, DataNpcDir);
+        NpcCompute.SetBuffer(ComputeNpcKID, DataCellMovementBID, DataCellMovement);
 		//NpcCompute.SetBuffer(ComputeNpcKID, FinalNpcPosBID, FinalNpcPos);
 		NpcCompute.SetBuffer(ComputeNpcKID, CellsNpcBID, CellsNpc);
 		NpcCompute.SetBuffer(ComputeNpcKID, CellsRaceBID, CellsRace);
 
         NpcCompute.SetBuffer(CheckRaceKID, CellsRaceBID, CellsRace);
-		NpcCompute.SetBuffer(CheckRaceKID, DataNpcDirBID, DataNpcDir);
+		//NpcCompute.SetBuffer(CheckRaceKID, DataNpcDirBID, DataNpcDir);
 		NpcCompute.SetBuffer(CheckRaceKID, CellsNpcBID, CellsNpc);
+		NpcCompute.SetBuffer(CheckRaceKID, DataCellMovementBID, DataCellMovement);
 
 		NpcCompute.SetBuffer(FinalizeDataKID, CellsRaceBID, CellsRace);
 		NpcCompute.SetBuffer(FinalizeDataKID, FinalNpcPosBID, FinalNpcPos);

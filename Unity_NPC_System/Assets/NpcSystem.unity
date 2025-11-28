@@ -149,6 +149,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   NpcMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  NpcAmount: 128
+  Size: {x: 128, y: 128}
 --- !u!4 &854776113
 Transform:
   m_ObjectHideFlags: 0
